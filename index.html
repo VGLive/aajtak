@@ -56,8 +56,10 @@ video{width:100%;height:100%}
 })();
 
 history.pushState(null, null, location.href);
-window.addEventListener('popstate', () => {
+window.addEventListener('popstate', function onBack() {
   if (confirm("Are you sure you want to exit?")) {
+    window.removeEventListener('popstate', onBack);
+    window.close();
     history.back();
   } else {
     history.pushState(null, null, location.href);
