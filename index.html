@@ -1,60 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aaj Tak</title>
-<meta name="referrer" content="no-referrer">
-<link rel="icon" href="https://i.ibb.co/6CjHX9b/Aaj-Tak-Logo.png">
-<script src="https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/shaka-player.ui.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/controls.css"/>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Aaj Tak</title>
+    <link rel="icon" href="https://i.ibb.co/6CjHX9b/Aaj-Tak-Logo.png">
+    <meta name="referrer" content="no-referrer">
 
-<style>
-body{margin:0;background:#000;overflow:hidden}
-.shaka-video-container{position:fixed;inset:0}
-video{width:100%;height:100%}
-</style>
+    <script src="https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/shaka-player.ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shaka-player@latest/dist/controls.css"/>
+
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; }
+        .shaka-video-container { position: fixed; inset: 0; }
+        video { width: 100%; height: 100%; }
+    </style>
 </head>
 <body>
 
-<div class="shaka-video-container" id="c">
-<video id="v" autoplay muted playsinline preload="metadata"></video>
-</div>
+    <div class="shaka-video-container" id="player-container">
+        <video id="video" autoplay playsinline preload="metadata"></video>
+    </div>
 
-<script>
-(function(){
-  const url = "https://feeds.intoday.in/aajtak/api/aajtakhd/master.m3u8";
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            shaka.polyfill.installAll();
+            if (!shaka.Player.isBrowserSupported()) return;
 
-  document.addEventListener("DOMContentLoaded", async () => {
-    shaka.polyfill.installAll();
-    if (!shaka.Player.isBrowserSupported()) return;
+            const video = document.getElementById("video");
+            const container = document.getElementById("player-container");
 
-    const v = document.getElementById("v");
-    const c = document.getElementById("c");
+            const player = new shaka.Player();
+            await player.attach(video);
 
-    const p = new shaka.Player(v);
-    const ui = new shaka.ui.Overlay(p, c, v);
+            const ui = new shaka.ui.Overlay(player, container, video);
+            
+            ui.configure({
+                addBigPlayButton: true,
+                addSeekBar: false,
+                controlPanelElements: ['play_pause', 'mute_volume', 'spacer', 'overflow_menu', 'fullscreen'],
+                overflowMenuButtons: ['quality', 'captions', 'language', 'picture_in_picture']
+            });
+            
+            player.configure({
+                manifest: { defaultPresentationDelay: 5 },
+                streaming: { lowLatencyMode: true, bufferingGoal: 10, rebufferingGoal: 2, safeSeekOffset: 5 }
+            });
 
-    ui.configure({
-      addBigPlayButton: true,
-      addSeekBar: false,
-      controlPanelElements: ['play_pause','mute_volume','spacer','overflow_menu','fullscreen'],
-      overflowMenuButtons: ['quality','captions','language','picture_in_picture']
-    });
-    
-    p.configure({
-      manifest: { defaultPresentationDelay: 5 },
-      streaming: { lowLatencyMode: true, bufferingGoal: 10, rebufferingGoal: 2, safeSeekOffset: 5 }
-    });
-
-    try {
-      await p.load(url);
-      v.play().catch(()=>{});
-    } catch(e) {
-      console.error("Error loading stream", e);
-    }
-  });
-})();
-</script>
+            try {
+                await player.load("https://feeds.intoday.in/aajtak/api/aajtakhd/master.m3u8");
+                video.play().catch(() => {});
+            } catch (e) {
+                console.error(e);
+            }
+        });
+    </script>
 </body>
 </html>
